@@ -115,7 +115,7 @@ for i in range(epoch):
     print("[Epoch %d/%d] [D loss %f] [D loss (real): %f] [G loss (fake): %f]"%( \
         i+1, epoch, test_d_loss.item(), test_real_loss.item(), test_fake_loss.item()))
 
-    grid_img = make_grid(test_fake_img, nrow=4, padding=0)
+    grid_img = make_grid(test_fake_img, nrow=8, padding=0)
     grid_img = grid_img.mul(0.5).add_(0.5)
     save_image(grid_img, SAVE_DIR+"/{}.png".format(i), nrow=1)
 
