@@ -8,7 +8,15 @@ from torch.utils.data import DataLoader
 import os
 from PIL import Image
 
-class MyDataset(Dataset):
+def weights_init_normal(m):
+    classname = m.__class__.__name__
+    if classname.find("Conv") != -1:
+        torch.nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find("BatchNorm2d") != -1:
+        torch.nn.init.normal_(m.weight.data, 1.0, 0.02)
+        torch.nn.init.constant_(m.bias.data, 0.0)
+
+class GraySamplerDataset(Dataset):
 
     def __init__(self, root, datamode, transform, latent_dim):
 
@@ -31,4 +39,30 @@ class MyDataset(Dataset):
             img = self.transform(img)
 
         return latent, img
+
+class ColoringDataset(Dataset):
+
+    def __init__(self, root, datamode, transform1, transform2):
+
+        image_dir = os.path.join(root, datamode)
+        self.image_paths = [os.path.join(image_dir, name) for name in os.listdir(image_dir)]
+        self.gray_transform = transform1
+        self.rgb_transform = transform2
+
+    def __len__(self):
+
+        return len(self.image_paths)
+
+    def __getitem__(self, index):
+
+        img_path = self.image_paths[index]
+
+        # img = Image.open(img_path)
+        # gray_img = self.gray_transform(img)
+        # rgb_img = self.rgb_transform(img)
+
+        gray_img = self.gray_transform(Image.open(img_path))
+        rgb_img = self.rgb_transform(Image.open(img_path))
+
+        return gray_img, rgb_img
 

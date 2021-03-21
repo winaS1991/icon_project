@@ -14,7 +14,7 @@ import numpy as np
 
 from dcgan import Generator
 from dcgan import Discriminator
-from util import MyDataset
+from util import GraySamplerDataset
 
 # ----- Device Setting -----
 cuda = True if torch.cuda.is_available() else False
@@ -35,8 +35,8 @@ transforms = transforms.Compose( \
     [transforms.RandomHorizontalFlip(), \
      transforms.Grayscale(), \
      transforms.ToTensor()])
-train_dataset = MyDataset(DATA_DIR, datamode="train", transform=transforms, latent_dim=latent_dim)
-test_dataset = MyDataset(DATA_DIR, datamode="test", transform=transforms, latent_dim=latent_dim)
+train_dataset = GraySamplerDataset(DATA_DIR, datamode="train", transform=transforms, latent_dim=latent_dim)
+test_dataset = GraySamplerDataset(DATA_DIR, datamode="test", transform=transforms, latent_dim=latent_dim)
 print("train dataset size: %d"%len(train_dataset))
 print("test dataset size: %d"%len(test_dataset))
 img_channels = train_dataset[0][1].shape[0]
