@@ -10,6 +10,7 @@ from torchvision.utils import save_image
 from torchvision import transforms
 print(torch.__version__)
 
+import csv
 import numpy as np
 
 from dcgan import Generator
@@ -82,11 +83,12 @@ for i in range(epoch):
         fake_img = model_G(latent)
 
         # ----- Train Generator -----
-        optimizer_G.zero_grad()
-        pred_fake = model_D(fake_img)
-        g_loss = adversarial_loss(pred_fake, ones)
-        g_loss.backward()
-        optimizer_G.step()
+        if step % 1 == 0:
+            optimizer_G.zero_grad()
+            pred_fake = model_D(fake_img)
+            g_loss = adversarial_loss(pred_fake, ones)
+            g_loss.backward()
+            optimizer_G.step()
 
         # ----- Train Discriminator -----
         optimizer_D.zero_grad()
@@ -114,6 +116,9 @@ for i in range(epoch):
     test_d_loss = (test_real_loss + test_fake_loss) / 2
     print("[Epoch %d/%d] [D loss %f] [D loss (real): %f] [G loss (fake): %f]"%( \
         i+1, epoch, test_d_loss.item(), test_real_loss.item(), test_fake_loss.item()))
+    with open(SAVE_DIR+'/log_loss.csv', 'a') as f:
+        writer = csv.writer(f)
+        writer.writerow([i+1, test_d_loss.item(), test_real_loss.item(), test_fake_loss.item()])
 
     grid_img = make_grid(test_fake_img, nrow=8, padding=0)
     grid_img = grid_img.mul(0.5).add_(0.5)

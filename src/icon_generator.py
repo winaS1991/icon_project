@@ -23,7 +23,7 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 DATA_DIR = "../data/anime"
 SAVE_DIR = "../result"
 MODEL_DIR = "../weight"
-GRAY_MODEL_NAME = "/dcgan_G.pth"
+GRAY_MODEL_NAME = "/resnet_G.pth"
 COLOR_MODEL_NAME = "/pix2pix_G.pth"
 
 latent_dim = 100
@@ -64,7 +64,6 @@ test_fake_img = gray_img_sampler(test_latent)
 test_fake_img = coloring(test_fake_img)
 
 grid_img = make_grid(test_fake_img, nrow=8, padding=0)
-grid_img = grid_img.mul(0.5).add_(0.5)
 save_image(grid_img, SAVE_DIR+"/samples.png", nrow=1)
 
 for i in range(len(test_fake_img)):
