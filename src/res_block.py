@@ -44,3 +44,35 @@ class ResBlock(nn.Module):
             skip = self.downsample(x)
         out += skip
         return self.relu(out)
+
+class SNResBlock(nn.Module):
+
+    def __init__(self, in_channels, out_channels, kernel_size, stride):
+
+        super(SNResBlock, self).__init__()
+
+        expansion = 4
+        middle_dim = int(out_channels / expansion)
+        self.stride = stride
+        self.is_downsample = (in_channels != out_channels)
+
+        self.conv1 = nn.utils.spectral_norm(nn.Conv2d(in_channels=in_channels, out_channels=middle_dim, kernel_size=1, stride=1, bias=False))
+        self.conv2 = nn.utils.spectral_norm(nn.Conv2d(in_channels=middle_dim, out_channels=middle_dim, kernel_size=kernel_size, stride=self.stride, padding=1, bias=False))
+        self.conv3 = nn.utils.spectral_norm(nn.Conv2d(in_channels=middle_dim, out_channels=middle_dim*expansion, kernel_size=1, stride=1, bias=False))
+        self.relu = nn.LeakyReLU(inplace=True)
+
+        self.downsample = nn.utils.spectral_norm(nn.Conv2d(in_channels=in_channels, out_channels=middle_dim*expansion, kernel_size=1, stride=self.stride, bias=False))
+
+    def forward(self, x):
+
+        out = self.conv1(x)
+        out = self.relu(out)
+        out = self.conv2(out)
+        out = self.relu(out)
+        out = self.conv3(out)
+
+        skip = x
+        if self.is_downsample:
+            skip = self.downsample(x)
+        out += skip
+        return self.relu(out)

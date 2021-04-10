@@ -24,7 +24,7 @@ DATA_DIR = "../data/anime"
 SAVE_DIR = "../result"
 MODEL_DIR = "../weight"
 GRAY_MODEL_NAME = "/resnet_G.pth"
-COLOR_MODEL_NAME = "/pix2pix_G.pth"
+COLOR_MODEL_NAME = "/pix2pix_sn_G.pth"
 
 latent_dim = 100
 gray_middle_dim = 128
@@ -51,7 +51,7 @@ print(gray_img_sampler)
 gray_img_sampler.load_state_dict(torch.load(MODEL_DIR+GRAY_MODEL_NAME))
 gray_img_sampler.eval()
 
-coloring = pix2pix_Generator(color_middle_dim, img_channels, out_channels)
+coloring = pix2pix_Generator(color_middle_dim, img_channels, out_channels, 0.0)
 coloring.cuda()
 print(coloring)
 coloring.load_state_dict(torch.load(MODEL_DIR+COLOR_MODEL_NAME))

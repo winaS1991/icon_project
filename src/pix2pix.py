@@ -3,6 +3,8 @@
 import torch
 from torch import nn
 
+from res_block import ResBlock, SNResBlock
+
 class DownSampleBlock(nn.Module):
 
     def __init__(self, in_channels, out_channels, normalize=True, dropout=0.0):
@@ -45,18 +47,18 @@ class UpSampleBlock(nn.Module):
 
 class Generator(nn.Module):
 
-    def __init__(self, middle_dim, in_channels, out_channels):
+    def __init__(self, middle_dim, in_channels, out_channels, dropout):
 
         super(Generator, self).__init__()
         self.down1 = DownSampleBlock(in_channels, middle_dim//8, normalize=False)
         self.down2 = DownSampleBlock(middle_dim//8, middle_dim//4)
         self.down3 = DownSampleBlock(middle_dim//4, middle_dim//2)
-        self.down4 = DownSampleBlock(middle_dim//2, middle_dim, dropout=0.5)
-        self.down5 = DownSampleBlock(middle_dim, middle_dim, dropout=0.5)
-        self.down6 = DownSampleBlock(middle_dim, middle_dim, normalize=False, dropout=0.5)
+        self.down4 = DownSampleBlock(middle_dim//2, middle_dim, dropout=dropout)
+        self.down5 = DownSampleBlock(middle_dim, middle_dim, dropout=dropout)
+        self.down6 = DownSampleBlock(middle_dim, middle_dim, normalize=False, dropout=dropout)
 
-        self.up1 = UpSampleBlock(middle_dim, middle_dim, dropout=0.5)
-        self.up2 = UpSampleBlock(middle_dim*2, middle_dim, dropout=0.5)
+        self.up1 = UpSampleBlock(middle_dim, middle_dim, dropout=dropout)
+        self.up2 = UpSampleBlock(middle_dim*2, middle_dim, dropout=dropout)
         self.up3 = UpSampleBlock(middle_dim*2, middle_dim//2)
         self.up4 = UpSampleBlock(middle_dim, middle_dim//4)
         self.up5 = UpSampleBlock(middle_dim//2, middle_dim//8)
@@ -90,21 +92,11 @@ class Discriminator(nn.Module):
 
         super(Discriminator, self).__init__()
 
-        def discriminator_block(in_filters, out_filters, normalization=True):
-
-            block = [
-                nn.Conv2d(in_channels=in_filters, out_channels=out_filters, kernel_size=4, stride=2, padding=1)
-                ]
-            if normalization:
-                block.append(nn.InstanceNorm2d(num_features=out_filters))
-            block.append(nn.LeakyReLU(negative_slope=0.2, inplace=True))
-            return block
-
         self.model = nn.Sequential(
-            *discriminator_block(in_channels+out_channels, middle_dim//8, normalization=False),
-            *discriminator_block(middle_dim//8, middle_dim//4),
-            *discriminator_block(middle_dim//4, middle_dim//2),
-            *discriminator_block(middle_dim//2, middle_dim),
+            SNResBlock(in_channels=in_channels+out_channels, out_channels=middle_dim//8, kernel_size=4, stride=2),
+            SNResBlock(in_channels=middle_dim//8, out_channels=middle_dim//4, kernel_size=4, stride=2),
+            SNResBlock(in_channels=middle_dim//4, out_channels=middle_dim//2, kernel_size=4, stride=2),
+            SNResBlock(in_channels=middle_dim//2, out_channels=middle_dim, kernel_size=4, stride=2),
             nn.ZeroPad2d(padding=(1, 0, 1, 0)),
             nn.Conv2d(in_channels=middle_dim, out_channels=1, kernel_size=4, padding=1, bias=False),
             nn.Sigmoid()

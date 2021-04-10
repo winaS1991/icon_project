@@ -10,6 +10,7 @@ from torchvision.utils import save_image
 from torchvision import transforms
 print(torch.__version__)
 
+import csv
 import numpy as np
 
 from pix2pix import Generator
@@ -29,7 +30,8 @@ SAVE_DIR = "../result"
 middle_dim = 512
 train_batch_size = 64
 test_batch_size = 64
-epoch = 100
+epoch = 500
+num_iter = 5
 
 # ----- Dataset Setting -----
 gray_transforms = transforms.Compose( \
@@ -53,7 +55,7 @@ train_loader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=Tr
 test_loader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=True, drop_last=True)
 
 # ----- Network Setting -----
-model_G = Generator(middle_dim, in_channels, out_channels)
+model_G = Generator(middle_dim, in_channels, out_channels, dropout=0.5)
 model_D = Discriminator(middle_dim, in_channels, out_channels)
 print(model_G)
 print(model_D)
@@ -95,13 +97,14 @@ for i in range(epoch):
         fake_rgb_img = model_G(real_gray_img)
 
         # ----- Train Generator -----
-        optimizer_G.zero_grad()
-        pred_fake = model_D(fake_rgb_img, real_gray_img)
-        a_loss = adversarial_loss(pred_fake, ones)
-        p_loss = pixel_loss(fake_rgb_img, real_rgb_img)
-        g_loss = a_loss + lambda_pixel * p_loss
-        g_loss.backward()
-        optimizer_G.step()
+        if step % num_iter == 0:
+            optimizer_G.zero_grad()
+            pred_fake = model_D(fake_rgb_img, real_gray_img)
+            a_loss = adversarial_loss(pred_fake, ones)
+            p_loss = pixel_loss(fake_rgb_img, real_rgb_img)
+            g_loss = a_loss + lambda_pixel * p_loss
+            g_loss.backward()
+            optimizer_G.step()
 
         # ----- Train Discriminator -----
         optimizer_D.zero_grad()
@@ -129,11 +132,12 @@ for i in range(epoch):
     test_d_loss = (test_real_loss + test_fake_loss) / 2
     print("[Epoch %d/%d] [D loss %f] [D loss (real): %f] [G loss (fake): %f]"%( \
         i+1, epoch, test_d_loss.item(), test_real_loss.item(), test_fake_loss.item()))
+    with open(SAVE_DIR+'/log_loss.csv', 'a') as f:
+        writer = csv.writer(f)
+        writer.writerow([i+1, test_d_loss.item(), test_real_loss.item(), test_fake_loss.item()])
 
     grid_img = make_grid(test_real_rgb_img, nrow=8, padding=0)
-    grid_img = grid_img.mul(0.5).add_(0.5)
     save_image(grid_img, SAVE_DIR+"/real{}.png".format(i), nrow=1)
     grid_img = make_grid(test_fake_rgb_img, nrow=8, padding=0)
-    grid_img = grid_img.mul(0.5).add_(0.5)
     save_image(grid_img, SAVE_DIR+"/fake{}.png".format(i), nrow=1)
 
