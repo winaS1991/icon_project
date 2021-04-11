@@ -56,11 +56,6 @@ class ColoringDataset(Dataset):
     def __getitem__(self, index):
 
         img_path = self.image_paths[index]
-
-        # img = Image.open(img_path)
-        # gray_img = self.gray_transform(img)
-        # rgb_img = self.rgb_transform(img)
-
         gray_img = self.gray_transform(Image.open(img_path))
         rgb_img = self.rgb_transform(Image.open(img_path))
 

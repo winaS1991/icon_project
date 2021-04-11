@@ -36,7 +36,7 @@ transforms = transforms.Compose( \
     [transforms.RandomHorizontalFlip(), \
      transforms.Grayscale(), \
      transforms.ToTensor()])
-train_dataset = GraySamplerDataset(DATA_DIR, datamode="train", transform=transforms, latent_dim=latent_dim)
+train_dataset = GraySamplerDataset(DATA_DIR, datamode="train_gan", transform=transforms, latent_dim=latent_dim)
 test_dataset = GraySamplerDataset(DATA_DIR, datamode="test", transform=transforms, latent_dim=latent_dim)
 print("train dataset size: %d"%len(train_dataset))
 print("test dataset size: %d"%len(test_dataset))
