@@ -22,15 +22,14 @@ cuda = True if torch.cuda.is_available() else False
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
 # ----- Set Param -----
-DATA_DIR = "../data/anime"
+DATA_DIR = "/content/drive/Mydrive/icon_project_workspace/data/anime/"
 SAVE_DIR = "../result"
 
 latent_dim = 100
 middle_dim = 128
 train_batch_size = 64
 test_batch_size = 64
-epoch = 100
-# epoch = 500
+epoch = 1000
 
 # ----- Dataset Setting -----
 transforms = transforms.Compose( \
