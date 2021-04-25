@@ -22,7 +22,7 @@ cuda = True if torch.cuda.is_available() else False
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
 # ----- Set Param -----
-DATA_DIR = "/content/drive/Mydrive/icon_project_workspace/data/anime/"
+DATA_DIR = "/content/drive/MyDrive/icon_project_workspace/data/anime/"
 SAVE_DIR = "../result"
 
 latent_dim = 100
