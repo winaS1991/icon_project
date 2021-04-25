@@ -29,7 +29,8 @@ latent_dim = 100
 middle_dim = 128
 train_batch_size = 64
 test_batch_size = 64
-epoch = 500
+epoch = 100
+# epoch = 500
 
 # ----- Dataset Setting -----
 transforms = transforms.Compose( \
@@ -64,6 +65,20 @@ if cuda:
     model_D.cuda()
     model_G.cuda()
 
+def gan_gloss(generator, discriminator, latent, imgs_size):
+    ones = Variable(Tensor(imgs_size, 1).fill_(1.0), requires_grad=False)
+    fake_img = generator(latent)
+    pred_fake = discriminator(fake_img)
+    return adversarial_loss(pred_fake, ones)
+
+def gan_dloss(discriminator, real_img, fake_img, imgs_size):
+    ones = Variable(Tensor(imgs_size, 1).fill_(1.0), requires_grad=False)
+    zeros = Variable(Tensor(imgs_size, 1).fill_(0.0), requires_grad=False)
+    real_loss = adversarial_loss(discriminator(real_img), ones)
+    fake_loss = adversarial_loss(discriminator(fake_img), zeros)
+    d_loss = (real_loss + fake_loss) / 2
+    return d_loss
+
 # ----- Optimizer Setting -----
 optimizer_G = torch.optim.Adam(model_G.parameters(), lr=0.0002, betas=(0.5, 0.999))
 optimizer_D = torch.optim.Adam(model_D.parameters(), lr=0.0002, betas=(0.5, 0.999))
@@ -83,18 +98,14 @@ for i in range(epoch):
         fake_img = model_G(latent)
 
         # ----- Train Generator -----
-        if step % 1 == 0:
-            optimizer_G.zero_grad()
-            pred_fake = model_D(fake_img)
-            g_loss = adversarial_loss(pred_fake, ones)
-            g_loss.backward()
-            optimizer_G.step()
+        optimizer_G.zero_grad()
+        g_loss = gan_gloss(model_G, model_D, latent, imgs.shape[0])
+        g_loss.backward()
+        optimizer_G.step()
 
         # ----- Train Discriminator -----
         optimizer_D.zero_grad()
-        real_loss = adversarial_loss(model_D(real_img), ones)
-        fake_loss = adversarial_loss(model_D(fake_img.detach()), zeros)
-        d_loss = (real_loss + fake_loss) / 2
+        d_loss = gan_dloss(model_D, real_img, fake_img.detach(), imgs.shape[0])
         d_loss.backward()
         optimizer_D.step()
 
